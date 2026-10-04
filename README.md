@@ -2,48 +2,87 @@
 
 ## Il progetto
 
-Questo progetto adatta graficamente la versione DOS del 1989 di **Bubble Bobble** alle capacità video dell'**Olivetti Prodest PC1**, dotato di controller Yamaha V6355D. Il PC1 dispone di una modalità estesa **160×200 a 16 colori** che il gioco originale non utilizza.
+Questo progetto nasce con l'obiettivo di adattare graficamente la versione DOS del 1989 di **Bubble Bobble** alle particolari capacità video dell'**Olivetti Prodest PC1**, dotato del controller video Yamaha V6355D.
 
-Non è un remake né una riscrittura: il lavoro nasce dal reverse engineering della versione DOS originale, dall'analisi dei formati grafici, dalla creazione di strumenti di estrazione/ricostruzione e da patch mirate. L'obiettivo è modificare il meno possibile il programma e preservare, dove possibile, la compatibilità con gli altri driver originali.
+La versione DOS originale supporta diversi adattatori grafici dell'epoca, tra cui CGA, EGA e Tandy. Il Prodest PC1 è compatibile con la grafica CGA, ma dispone anche di una modalità estesa **160×200 a 16 colori** che il gioco originale non utilizza.
+
+L'idea alla base del progetto è stata quindi capire se fosse possibile sfruttare questa modalità per realizzare una versione graficamente più ricca di Bubble Bobble sul PC1, mantenendo per quanto possibile intatta la struttura del gioco originale.
+
+Non si tratta di un remake né di una riscrittura del gioco.
+
+Il lavoro è stato realizzato attraverso il reverse engineering della versione DOS originale, l'analisi dei suoi formati grafici, la creazione di strumenti per estrarre e ricostruire le risorse e alcune patch mirate al codice originale. Uno degli obiettivi è stato quello di modificare il meno possibile il funzionamento originale del programma. Dove possibile, le modifiche sono state limitate ai driver grafici e ai dati strettamente necessari alla nuova modalità PC1.
+
+Un altro obiettivo è stato quello di preservare la compatibilità con gli altri sistemi grafici originali. Per esempio, la nuova schermata `ARCADE.TCF`, pur essendo stata ridisegnata utilizzando una sorgente 160×200, viene correttamente visualizzata anche utilizzando i driver EGA e Tandy, grazie a specifiche modifiche dei rispettivi renderer.
+
+Il progetto ha soprattutto uno scopo tecnico, storico e didattico: studiare il funzionamento di un gioco DOS commerciale della fine degli anni '80 e sperimentare ciò che l'hardware del Prodest PC1 avrebbe potuto offrire se fosse stato sfruttato specificamente.
 
 ## Autori e contributi
 
-- **Massimiliano Pascuzzi** — ideazione e coordinamento, reverse engineering, sviluppo del workflow, analisi e test, verifica su Olivetti Prodest PC1 reale.
-- **Davide Ottonelli** — ridisegno e adattamento della grafica alla rappresentazione a doppio pixel orizzontale del PC1.
-- **ChatGPT (OpenAI)** — assistenza al reverse engineering, analisi assembly e formati binari, sviluppo/revisione degli strumenti Python, patch binarie e documentazione tecnica.
+### Massimiliano Pascuzzi
+
+Ideazione e coordinamento del progetto, reverse engineering, analisi e test delle modifiche, sviluppo del workflow grafico e verifica sul vero hardware Olivetti Prodest PC1.
+
+### Davide Ottonelli
+
+Ridisegno e adattamento della grafica del gioco alla rappresentazione a doppio pixel orizzontale richiesta dalla modalità 160×200 a 16 colori del PC1.
+
+Una parte importante del lavoro grafico è consistita nel ridisegnare gli sprite e gli elementi del gioco tenendo conto non soltanto dei 16 colori disponibili, ma anche della particolare geometria dei pixel di questa modalità video.
+
+### ChatGPT (OpenAI)
+
+Assistenza al reverse engineering, analisi del codice assembly e dei formati binari, sviluppo e revisione degli strumenti Python, progettazione delle patch binarie e documentazione tecnica.
+
+Il lavoro è stato svolto in maniera iterativa: analisi del codice, formulazione delle modifiche, test in emulazione e verifica del risultato sull'hardware reale.
 
 ### Ringraziamenti
 
-Un ringraziamento a [rebb64](https://github.com/zaidka/rebb64), che ha gentilmente concesso l'uso dei blocchi estratti dalla versione Commodore 64 come riferimento per il lavoro grafico.
+Un ringraziamento particolare va al progetto [**rebb64**](https://github.com/zaidka/rebb64), che è stato prezioso per lo studio della grafica della versione Commodore 64 di Bubble Bobble e ci ha permesso di utilizzare i blocchi estratti da tale versione come base per il lavoro grafico.
 
-## Modalità PC1
+La grafica originale di Bubble Bobble e i relativi diritti rimangono naturalmente di proprietà dei rispettivi titolari.
 
-Ogni pixel logico 16 colori viene codificato tramite due pixel CGA 2bpp:
+## La modalità video del PC1
+
+La modalità utilizzata dal progetto è una modalità estesa del controller Yamaha V6355D che permette di ottenere **160×200 pixel a 16 colori**.
+
+Dal punto di vista della rappresentazione grafica, ogni pixel logico a 16 colori viene codificato utilizzando due pixel CGA 2bpp adiacenti. Per un indice colore `i` compreso tra 0 e 15:
 
 ```text
 left  = (i >> 2) & 3
 right = i & 3
 ```
 
-Quindi un'immagine logica 160×200 diventa una rappresentazione codificata larga 320 pixel. Dettagli in `docs/PC1-VIDEO.md`.
+Per esempio:
 
-## File interessati
+```text
+colore 8  -> (2,0)
+colore 2  -> (0,2)
+colore 5  -> (1,1)
+colore 15 -> (3,3)
+```
 
-Il repository **non distribuisce file originali del gioco**.
+Di conseguenza, un'immagine logica larga 160 pixel viene rappresentata come un'immagine codificata larga 320 pixel. Questo principio è alla base degli strumenti di conversione presenti nel repository. Per i dettagli tecnici vedere `docs/PC1-VIDEO.md`.
 
-| File | Funzione | Intervento |
+## File originali interessati dal progetto
+
+Il progetto interviene su diversi file della versione DOS originale di Bubble Bobble. **Nessuno di questi file originali viene distribuito nel repository.**
+
+| File | Contenuto / funzione | Intervento |
 |---|---|---|
-| `BUBBLE.EXE` | Loader e video | inizializzazione PC1 e patch renderer |
-| `BUBBOB.DAT` | programma principale | patch grafiche e modifiche opzionali |
-| `SPRITES.CCF` | sprite | estrazione, ridisegno, mask, conversione e rebuild |
-| `BBLOCKS.CCF` | blocchi livelli | rebuild PC1 |
-| `BBLOCKS.TCF` | grafica alternativa blocchi | usato per recuperare il CCF danneggiato |
-| `TITLEPIC.CCF` | titolo | conversione e rebuild |
-| `EXTEND.CCF` | schermata EXTEND | conversione e rebuild |
-| `SECRET.CCF` | schermata SECRET | conversione e rebuild |
-| `ARCADE.TCF` | schermata ARCADE | nuova sorgente 160×200 e adattamento renderer |
+| `BUBBLE.EXE` | Loader e gestione video | inizializzazione PC1 e patch dei renderer |
+| `BUBBOB.DAT` | programma principale del gioco | patch grafiche e modifiche opzionali |
+| `SPRITES.CCF` | sprite del gioco | estrazione, ridisegno, mask, conversione e ricostruzione |
+| `BBLOCKS.CCF` | elementi grafici dei livelli | ricostruzione della versione PC1 |
+| `BBLOCKS.TCF` | grafica alternativa dei blocchi | utilizzato durante lo sviluppo per recuperare i blocchi |
+| `TITLEPIC.CCF` | schermata del titolo | estrazione, conversione e ricostruzione |
+| `EXTEND.CCF` | schermata EXTEND | estrazione, conversione e ricostruzione |
+| `SECRET.CCF` | schermata SECRET | estrazione, conversione e ricostruzione |
+| `ARCADE.TCF` | schermata ARCADE | conversione 160×200 e adattamento dei renderer |
 
-> `BBLOCKS.TCF` è stato usato soltanto perché il `BBLOCKS.CCF` della copia impiegata nello sviluppo era danneggiato. Non è un requisito generale.
+### Nota su BBLOCKS.TCF
+
+Nella copia del gioco utilizzata durante lo sviluppo, `BBLOCKS.CCF` risultava danneggiato. Per questo motivo `BBLOCKS.TCF` è stato utilizzato come sorgente alternativa per recuperare correttamente la grafica dei blocchi.
+
+L'utilizzo del `.TCF` deriva quindi esclusivamente da questa circostanza: non è un requisito generale del processo di conversione di `BBLOCKS.CCF`.
 
 # SPRITES.CCF
 
@@ -124,25 +163,63 @@ py bb_build_sprites_ccf.py work_pc1 --import-masks --out build\SPRITES.CCF
 
 # BBLOCKS.CCF
 
-Gli strumenti sono in `tools/bblocks/`.
+`BBLOCKS.CCF` contiene gli elementi grafici utilizzati per costruire i livelli. Gli strumenti dedicati si trovano in `tools/bblocks/`.
 
-La sorgente è 160×200 a 16 colori indicizzati. Quando la palette non è certamente corretta, conviene normalizzarla:
+Come spiegato sopra, durante questo progetto abbiamo utilizzato `BBLOCKS.TCF` come sorgente soltanto perché il `BBLOCKS.CCF` presente nella nostra copia del gioco risultava danneggiato. Il repository comprende quindi anche uno strumento per estrarre e rendere visibile la grafica contenuta nel TCF.
+
+### Estrazione dei blocchi da BBLOCKS.TCF
+
+Partendo dal file originale:
+
+```bat
+py bb_extract_bblocks_tcf.py BBLOCKS.TCF --out work_bblocks_tcf --clean
+```
+
+Lo script decomprime lo stream Bubble LZW e crea una directory di lavoro che comprende il PNG estratto e i dati necessari a documentare l'operazione:
+
+```text
+work_bblocks_tcf\
+    manifest.json
+    source\
+        BBLOCKS.TCF.original
+        BBLOCKS.TCF.raw
+        BBLOCKS.image_32000.raw
+        BBLOCKS.tail.bin
+    image\
+        BBLOCKS.png
+```
+
+`BBLOCKS.png` rappresenta la grafica estratta dal TCF come immagine indicizzata **320×200 a 16 colori**. I primi 32000 byte decompressi sono interpretati come grafica packed 4bpp, con il nibble alto corrispondente al pixel sinistro e il nibble basso al pixel destro. Gli eventuali byte successivi vengono conservati separatamente in `BBLOCKS.tail.bin`.
+
+Nel nostro caso questa estrazione è stata il punto di partenza per recuperare i blocchi che non potevamo ottenere correttamente dal `BBLOCKS.CCF` danneggiato.
+
+### Preparazione della nuova immagine PC1
+
+Il nuovo `BBLOCKS.CCF` viene invece costruito partendo da un'immagine logica **160×200 a 16 colori**.
+
+Per il builder sono importanti gli **indici della palette**, non soltanto l'aspetto visivo dei colori. Se non si è certi che il PNG sorgente utilizzi già esattamente la palette indicizzata richiesta, è quindi consigliabile normalizzarlo:
 
 ```bat
 py make_indexed_precise.py BBLOCKS_160x200.png BBLOCKS_160x200_INDEXED.png
 ```
 
-Poi:
+Il file ottenuto deve essere un PNG palettizzato i cui pixel utilizzano gli indici 0..15 previsti dal progetto.
+
+### Costruzione del nuovo BBLOCKS.CCF
+
+A questo punto il file PC1 può essere costruito con:
 
 ```bat
 py bb_build_bblocks_pc1.py BBLOCKS_160x200_INDEXED.png --out build\BBLOCKS.CCF
 ```
 
-Con raw e preview:
+Per conservare anche il raw generato e una preview:
 
 ```bat
 py bb_build_bblocks_pc1.py BBLOCKS_160x200_INDEXED.png --out build\BBLOCKS.CCF --raw build\BBLOCKS.raw --preview build\BBLOCKS_preview.png
 ```
+
+Il builder converte l'immagine logica 160×200 nella codifica a doppio pixel utilizzata dalla modalità PC1 e ricomprime il risultato nel formato utilizzato dal gioco.
 
 # Schermate statiche
 
