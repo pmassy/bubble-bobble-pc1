@@ -365,4 +365,4 @@ Non vengono distribuiti `BUBBLE.EXE`, `BUBBOB.DAT`, CCF/TCF originali, eseguibil
 
 Bubble Bobble, personaggi, grafica originale, marchi e materiali del gioco appartengono ai rispettivi titolari. Il progetto è indipendente e non è affiliato né approvato da Taito.
 
-La licenza degli strumenti e della documentazione del progetto non concede diritti sui materiali del gioco originale. La scelta della licenza del repository verrà formalizzata separatamente.
+Il codice originale, gli strumenti, le patch e la documentazione realizzati specificamente per questo progetto sono distribuiti secondo la **MIT License**; vedere `LICENSE`. La licenza non si applica e non concede alcun diritto sui file, sulla grafica, sui personaggi, sui marchi o su qualsiasi altro materiale appartenente al gioco originale.
