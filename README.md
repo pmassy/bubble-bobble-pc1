@@ -353,8 +353,7 @@ bubble-bobble-pc1/
    ├ static/
    ├ sprites/
    ├ ida/
-   ├ cheats/
-   └ common/
+   └ cheats/
 ```
 
 # Stato e copyright
@@ -366,3 +365,377 @@ Non vengono distribuiti `BUBBLE.EXE`, `BUBBOB.DAT`, CCF/TCF originali, eseguibil
 Bubble Bobble, personaggi, grafica originale, marchi e materiali del gioco appartengono ai rispettivi titolari. Il progetto è indipendente e non è affiliato né approvato da Taito.
 
 Il codice originale, gli strumenti, le patch e la documentazione realizzati specificamente per questo progetto sono distribuiti secondo la **MIT License**; vedere `LICENSE`. La licenza non si applica e non concede alcun diritto sui file, sulla grafica, sui personaggi, sui marchi o su qualsiasi altro materiale appartenente al gioco originale.
+
+
+---
+
+# English version
+
+# Bubble Bobble PC1 — 16-color edition
+
+## The project
+
+This project was created to adapt the graphics of the 1989 DOS version of **Bubble Bobble** to the unusual video capabilities of the **Olivetti Prodest PC1**, equipped with the Yamaha V6355D video controller.
+
+The original DOS release supports several graphics adapters of the period, including CGA, EGA and Tandy. The Prodest PC1 is CGA-compatible, but it also provides an extended **160×200 16-color** mode that the original game does not use.
+
+The idea behind the project was therefore to find out whether this mode could be exploited to create a graphically richer version of Bubble Bobble on the PC1 while keeping the original structure of the game as intact as possible.
+
+This is neither a remake nor a rewrite of the game.
+
+The work was carried out through reverse engineering of the original DOS version, analysis of its graphics formats, development of tools to extract and rebuild its resources, and a number of targeted patches to the original code. One of the main goals was to alter the original program as little as possible. Wherever possible, changes were limited to the graphics drivers and to the data strictly required by the new PC1 mode.
+
+Another goal was to preserve compatibility with the other original graphics systems. For example, the new `ARCADE.TCF` screen, although redesigned from a 160×200 source, is also displayed correctly through the EGA and Tandy drivers thanks to specific changes to their renderers.
+
+The project is primarily technical, historical and educational: it is an attempt to study how a late-1980s commercial DOS game works and to explore what the Prodest PC1 hardware might have offered if the game had been specifically designed to take advantage of it.
+
+## Authors and contributions
+
+### Massimiliano Pascuzzi
+
+Project concept and coordination, reverse engineering, analysis and testing of the modifications, development of the graphics workflow, and verification on real Olivetti Prodest PC1 hardware.
+
+### Davide Ottonelli
+
+Redesign and adaptation of the game graphics to the horizontally doubled-pixel representation required by the PC1 160×200 16-color mode.
+
+A significant part of the graphics work involved redrawing sprites and game elements while taking into account not only the 16 available colors, but also the unusual pixel geometry of this video mode.
+
+### ChatGPT (OpenAI)
+
+Assistance with reverse engineering, assembly-code and binary-format analysis, development and review of the Python tools, binary-patch design, and technical documentation.
+
+The work was carried out iteratively: code analysis, formulation of modifications, testing under emulation, and verification of the results on real hardware.
+
+### Acknowledgements
+
+Special thanks to the [**rebb64**](https://github.com/zaidka/rebb64) project, which was valuable for studying the graphics of the Commodore 64 version of Bubble Bobble and allowed us to use blocks extracted from that version as a basis for the graphics work.
+
+The original Bubble Bobble graphics and all related rights naturally remain the property of their respective rights holders.
+
+## The PC1 video mode
+
+The project uses an extended mode of the Yamaha V6355D controller providing **160×200 pixels in 16 colors**.
+
+In the graphics representation, each logical 16-color pixel is encoded using two adjacent CGA 2bpp pixels. For a color index `i` from 0 to 15:
+
+```text
+left  = (i >> 2) & 3
+right = i & 3
+```
+
+For example:
+
+```text
+color 8  -> (2,0)
+color 2  -> (0,2)
+color 5  -> (1,1)
+color 15 -> (3,3)
+```
+
+As a result, a logical image 160 pixels wide is represented by an encoded image 320 pixels wide. This principle is the basis of the conversion tools included in the repository. See `docs/PC1-VIDEO.md` for technical details.
+
+## Original game files involved
+
+The project works with several files from the original DOS version of Bubble Bobble. **None of these original files are distributed in this repository.**
+
+| File | Contents / purpose | Modification |
+|---|---|---|
+| `BUBBLE.EXE` | loader and video handling | PC1 initialization and renderer patches |
+| `BUBBOB.DAT` | main game program | graphics patches and optional modifications |
+| `SPRITES.CCF` | game sprites | extraction, redesign, masks, conversion and rebuild |
+| `BBLOCKS.CCF` | level graphics | PC1 rebuild |
+| `BBLOCKS.TCF` | alternate block graphics | used during development to recover the blocks |
+| `TITLEPIC.CCF` | title screen | extraction, conversion and rebuild |
+| `EXTEND.CCF` | EXTEND screen | extraction, conversion and rebuild |
+| `SECRET.CCF` | SECRET screen | extraction, conversion and rebuild |
+| `ARCADE.TCF` | ARCADE screen | 160×200 conversion and renderer adaptation |
+
+### Note about BBLOCKS.TCF
+
+In the copy of the game used during development, `BBLOCKS.CCF` was damaged. For this reason, `BBLOCKS.TCF` was used as an alternative source from which the block graphics could be recovered correctly.
+
+The use of the `.TCF` therefore comes solely from this circumstance; it is not a general requirement for converting `BBLOCKS.CCF`.
+
+# SPRITES.CCF
+
+The dedicated tools are in `tools/sprites/`.
+
+### 1. Extraction
+
+```bat
+py bb_extract_sprites_ccf.py SPRITES.CCF --out work_original --clean
+```
+
+### 2. Duplicate detection and mega-PNG creation
+
+```bat
+py bb_mark_duplicate_sprites.py work_original\sprites
+```
+
+This produces:
+
+```text
+sprites_duplicates_annotated.png
+sprites_duplicates_report.txt
+sprites_duplicates.csv
+```
+
+During development, **2,848 images** were analyzed, corresponding to **547 unique groups** and **2,301 duplicates**.
+
+### 3. Redesign
+
+The mega-PNG is edited to create the new 16-color graphics. In the following examples the resulting file is called `SPRITES_16_COLOURS.png`.
+
+### 4. Reimport
+
+```bat
+py bb_import_edited_sprite_sheet.py SPRITES_16_COLOURS.png work_original\sprites sprites_duplicates.csv work_edited\sprites --clean
+```
+
+### 5. Preparing the PC1 directory
+
+The final directory must also contain `manifest.json` and `source\` from the original extraction:
+
+```bat
+copy work_original\manifest.json work_pc1\manifest.json
+xcopy work_original\source work_pc1\source /E /I /Y
+```
+
+### 6. Converting the sprites to PC1 format
+
+```bat
+py bb_convert_sprite16_to_pc1.py work_edited\sprites work_pc1\sprites
+```
+
+**Convert only the sprite graphics, not the masks.** Conversion must be performed **before** the final masks are added.
+
+```text
+sprite reimport -> PC1 conversion -> mask merge -> build
+```
+
+### 7. Masks
+
+The masks were obtained from a second mega-PNG in which black areas that genuinely belong to the sprites are temporarily changed to a non-black color. This makes it possible to distinguish the black background, which represents transparency, from opaque black areas that are part of the sprite itself.
+
+### 8. Merging the masks
+
+Only after the PC1 conversion:
+
+```bat
+robocopy work_masks\sprites work_pc1\sprites phase_*_mask.png /S
+```
+
+After this merge, **do not run the PC1 conversion again** on the resulting directory.
+
+### 9. Rebuild
+
+```bat
+py bb_build_sprites_ccf.py work_pc1 --import-masks --out build\SPRITES.CCF
+```
+
+# BBLOCKS.CCF
+
+`BBLOCKS.CCF` contains the graphics used to construct the game levels. The dedicated tools are in `tools/bblocks/`.
+
+As explained above, this project used `BBLOCKS.TCF` as a source only because the `BBLOCKS.CCF` in our copy of the game was damaged. The repository therefore also includes a tool for extracting and viewing the graphics contained in the TCF.
+
+### Extracting the blocks from BBLOCKS.TCF
+
+Starting from the original file:
+
+```bat
+py bb_extract_bblocks_tcf.py BBLOCKS.TCF --out work_bblocks_tcf --clean
+```
+
+The script decompresses the Bubble LZW stream and creates a working directory containing the extracted PNG and the data used to document the operation:
+
+```text
+work_bblocks_tcf\
+    manifest.json
+    source\
+        BBLOCKS.TCF.original
+        BBLOCKS.TCF.raw
+        BBLOCKS.image_32000.raw
+        BBLOCKS.tail.bin
+    image\
+        BBLOCKS.png
+```
+
+`BBLOCKS.png` represents the graphics extracted from the TCF as an indexed **320×200 16-color** image. The first 32,000 decompressed bytes are interpreted as packed 4bpp graphics, with the high nibble representing the left pixel and the low nibble the right pixel. Any following bytes are preserved separately in `BBLOCKS.tail.bin`.
+
+In our case, this extraction was the starting point for recovering the blocks that could not be obtained correctly from the damaged `BBLOCKS.CCF`.
+
+### Preparing the new PC1 image
+
+The new `BBLOCKS.CCF` is instead built from a logical **160×200 16-color** image.
+
+The builder depends on **palette indices**, not merely on the visible RGB colors. If there is any doubt that the source PNG already uses exactly the required indexed palette, it is therefore advisable to normalize it first:
+
+```bat
+py make_indexed_precise.py BBLOCKS_160x200.png BBLOCKS_160x200_INDEXED.png
+```
+
+The resulting file must be a paletted PNG whose pixels use the 0..15 indices expected by the project.
+
+### Building the new BBLOCKS.CCF
+
+The PC1 file can then be built with:
+
+```bat
+py bb_build_bblocks_pc1.py BBLOCKS_160x200_INDEXED.png --out build\BBLOCKS.CCF
+```
+
+To also save the generated raw data and a preview:
+
+```bat
+py bb_build_bblocks_pc1.py BBLOCKS_160x200_INDEXED.png --out build\BBLOCKS.CCF --raw build\BBLOCKS.raw --preview build\BBLOCKS_preview.png
+```
+
+The builder converts the logical 160×200 image into the doubled-pixel encoding used by the PC1 mode and recompresses the result into the format used by the game.
+
+# Static screens
+
+In addition to sprites and level blocks, Bubble Bobble contains several graphics screens stored in separate CCF files. This project works with **TITLEPIC.CCF**, **EXTEND.CCF**, and **SECRET.CCF**.
+
+These files can all be handled with the same set of tools in `tools/static/`. The workflow is deliberately similar for all three screens: extract the original CCF into a working directory, prepare a new logical 160×200 16-color image, convert it to the doubled-pixel representation required by the PC1, and finally rebuild the CCF while preserving the structure recovered from the original file.
+
+The distinction between the **logical 160×200 image** and the **encoded 320×200 image** is important. The image that is drawn or edited represents what should appear on the PC1; `bb_pc1_encode_160_to_cga320.py` performs the transformation required by the video representation used by the game. The `--preview` option also makes it possible to inspect the conversion result before rebuilding the file.
+
+### TITLEPIC.CCF
+
+`TITLEPIC.CCF` contains the game's main title screen. First extract the original file:
+
+```bat
+py bb_extract_static_ccf.py TITLEPIC.CCF --out work_titlepic --clean
+```
+
+The `work_titlepic` directory preserves the structure and information required for the later rebuild. Prepare the new screen as a 160×200 image and convert it to PC1 format:
+
+```bat
+py bb_pc1_encode_160_to_cga320.py TITLEPIC_160x200.png TITLEPIC_pc1.png --preview
+```
+
+The converted image must then replace the corresponding `TITLEPIC` image in the working directory produced by the extractor. The new CCF can then be rebuilt:
+
+```bat
+py bb_build_static_ccf.py work_titlepic --out build\TITLEPIC.CCF
+```
+
+### EXTEND.CCF
+
+`EXTEND.CCF` contains the screen used in the **EXTEND** sequence. The procedure is the same: extract the original file, convert the new graphics, and rebuild it.
+
+```bat
+py bb_extract_static_ccf.py EXTEND.CCF --out work_extend --clean
+py bb_pc1_encode_160_to_cga320.py EXTEND_160x200.png EXTEND_pc1.png --preview
+```
+
+Use `EXTEND_pc1.png` as the new `EXTEND` image in the `work_extend` directory. Finally:
+
+```bat
+py bb_build_static_ccf.py work_extend --out build\EXTEND.CCF
+```
+
+### SECRET.CCF
+
+`SECRET.CCF` is handled in the same way. After extraction:
+
+```bat
+py bb_extract_static_ccf.py SECRET.CCF --out work_secret --clean
+```
+
+convert the new 160×200 image:
+
+```bat
+py bb_pc1_encode_160_to_cga320.py SECRET_160x200.png SECRET_pc1.png --preview
+```
+
+Use `SECRET_pc1.png` as the new `SECRET` image in `work_secret`, without altering the other files generated during extraction. The final rebuild is:
+
+```bat
+py bb_build_static_ccf.py work_secret --out build\SECRET.CCF
+```
+
+For all three screens the principle is the same: **the original CCF provides the structure, while the 160×200 PNG provides the new graphics**. The tools handle the PC1 encoding and reconstruction of a file usable by the game.
+
+# ARCADE.TCF
+
+The dedicated tools are in `tools/arcade/`.
+
+```bat
+py bb_extract_arcade_tcf.py ARCADE.TCF --out work_arcade --clean
+```
+
+Extraction produces `work_arcade\image\ARCADE.png` at 320×200. Replace it with the new **160×200 16-color** image, keeping the filename `ARCADE.png`.
+
+```bat
+py bb_build_arcade_tcf_pc1.py work_arcade --out build\ARCADE.TCF
+```
+
+The builder converts the PNG to packed 4bpp, preserves the original tail data, recompresses the contents, and automatically verifies the result by decompressing it again. The new graphics section occupies 16,000 decompressed bytes.
+
+The change in width required adaptations to the **PC1, EGA and Tandy** renderers. Patch details and exact bytes are documented in `patches/BUBBLE-EXE.md`.
+
+# BUBBLE.EXE
+
+The patches cover PC1 initialization and the PC1/EGA/Tandy renderers. See `patches/BUBBLE-EXE.md`. The repository distributes neither the original nor a modified executable.
+
+# BUBBOB.DAT
+
+`BUBBOB.DAT` is an EXEPACK-compressed DOS executable. For static analysis:
+
+```bat
+py unexepack_py.py BUBBOB.DAT BUBBOB_UNPACKED.EXE
+```
+
+The unpacked file is intended only for IDA/static analysis; the game continues to use `BUBBOB.DAT` at runtime. Verified patches are documented in `patches/BUBBOB-DAT.md`.
+
+# BBCHEAT.COM
+
+`tools/cheats/BBCHEAT.ASM` is an 8086/DOS utility used to enable or disable invulnerability and to select the initial level from 1 to 100. It validates the expected bytes before modifying them. It was assembled and tested with **TASM 1.0**.
+
+# Requirements
+
+- Python 3
+- Pillow
+- your own compatible copy of the DOS version of Bubble Bobble
+
+```bat
+pip install -r requirements.txt
+```
+
+# Repository structure
+
+```text
+bubble-bobble-pc1/
+├ README.md
+├ LICENSE
+├ requirements.txt
+├ docs/
+│  ├ PC1-VIDEO.md
+│  ├ FORMATS.md
+│  ├ SPRITES.md
+│  ├ REVERSE-ENGINEERING.md
+│  └ PROJECT-STATUS.md
+├ patches/
+│  ├ BUBBLE-EXE.md
+│  └ BUBBOB-DAT.md
+└ tools/
+   ├ arcade/
+   ├ bblocks/
+   ├ static/
+   ├ sprites/
+   ├ ida/
+   └ cheats/
+```
+
+# Project status and copyright
+
+The repository documents the parts of the project that have reached a sufficiently stable and verified state. A significant part of the final result has also been tested directly on a real Olivetti Prodest PC1.
+
+The repository does not distribute `BUBBLE.EXE`, `BUBBOB.DAT`, original CCF/TCF files, modified game executables, sprites, or other original graphics assets. The tools require files supplied by the user from their own copy of the game.
+
+Bubble Bobble, its characters, original graphics, trademarks, and other original game materials remain the property of their respective rights holders. This project is independent and is not affiliated with or endorsed by Taito.
+
+The original code, tools, patches, and documentation created specifically for this project are distributed under the **MIT License**; see `LICENSE`. The license does not apply to, and grants no rights over, files, graphics, characters, trademarks, or any other material belonging to the original game.
