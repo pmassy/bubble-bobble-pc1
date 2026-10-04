@@ -1,4 +1,4 @@
-# Bubble Bobble PC1 — Edizione 16 colori
+# Bubble Bobble OLIVETTI PRODEST PC1 — Edizione 16 colori
 
 ## Il progetto
 
@@ -371,7 +371,7 @@ Il codice originale, gli strumenti, le patch e la documentazione realizzati spec
 
 # English version
 
-# Bubble Bobble PC1 — 16-color edition
+# Bubble Bobble OLIVETTI PRODEST PC1 — 16-color edition
 
 ## The project
 
