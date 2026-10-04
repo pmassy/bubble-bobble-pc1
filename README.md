@@ -223,33 +223,68 @@ Il builder converte l'immagine logica 160×200 nella codifica a doppio pixel uti
 
 # Schermate statiche
 
-Gli strumenti sono in `tools/static/`.
+Oltre agli sprite e ai blocchi dei livelli, Bubble Bobble contiene alcune schermate grafiche memorizzate in file CCF separati. Nel progetto abbiamo lavorato su **TITLEPIC.CCF**, **EXTEND.CCF** e **SECRET.CCF**.
 
-### TITLEPIC
+Questi file possono essere trattati con lo stesso gruppo di strumenti, raccolti in `tools/static/`. Il workflow è volutamente simile per tutte e tre le schermate: si estrae il CCF originale in una directory di lavoro, si prepara una nuova immagine logica 160×200 a 16 colori, la si converte nella rappresentazione a doppio pixel richiesta dal PC1 e infine si ricostruisce il CCF conservando la struttura ricavata dal file originale.
+
+La separazione fra **immagine logica 160×200** e **immagine codificata 320×200** è importante. Il file grafico che si disegna o modifica rappresenta ciò che si vuole vedere sul PC1; `bb_pc1_encode_160_to_cga320.py` effettua invece la trasformazione necessaria al formato video utilizzato dal gioco. L'opzione `--preview` permette inoltre di controllare visivamente il risultato della conversione prima della ricostruzione.
+
+### TITLEPIC.CCF
+
+`TITLEPIC.CCF` contiene la schermata principale mostrata dal gioco. Per prima cosa viene estratto il file originale:
 
 ```bat
 py bb_extract_static_ccf.py TITLEPIC.CCF --out work_titlepic --clean
+```
+
+La directory `work_titlepic` conserva la struttura e le informazioni necessarie al successivo rebuild. La nuova schermata viene preparata come immagine 160×200 e convertita nel formato PC1:
+
+```bat
 py bb_pc1_encode_160_to_cga320.py TITLEPIC_160x200.png TITLEPIC_pc1.png --preview
+```
+
+L'immagine convertita deve quindi sostituire l'immagine `TITLEPIC` corrispondente nella directory di lavoro prodotta dall'estrattore. A quel punto il nuovo CCF può essere ricostruito:
+
+```bat
 py bb_build_static_ccf.py work_titlepic --out build\TITLEPIC.CCF
 ```
 
-L'immagine convertita va usata come nuova immagine `TITLEPIC` nella directory estratta prima del build.
+### EXTEND.CCF
 
-### EXTEND
+`EXTEND.CCF` contiene la schermata utilizzata nella sequenza **EXTEND**. Il procedimento è lo stesso: estrazione del file originale, conversione della nuova grafica e ricostruzione.
 
 ```bat
 py bb_extract_static_ccf.py EXTEND.CCF --out work_extend --clean
 py bb_pc1_encode_160_to_cga320.py EXTEND_160x200.png EXTEND_pc1.png --preview
+```
+
+L'immagine `EXTEND_pc1.png` deve essere utilizzata come nuova immagine `EXTEND` nella directory `work_extend`. Infine:
+
+```bat
 py bb_build_static_ccf.py work_extend --out build\EXTEND.CCF
 ```
 
-### SECRET
+### SECRET.CCF
+
+`SECRET.CCF` viene gestito nello stesso modo. Dopo l'estrazione:
 
 ```bat
 py bb_extract_static_ccf.py SECRET.CCF --out work_secret --clean
+```
+
+si converte la nuova immagine 160×200:
+
+```bat
 py bb_pc1_encode_160_to_cga320.py SECRET_160x200.png SECRET_pc1.png --preview
+```
+
+`SECRET_pc1.png` viene quindi utilizzata come nuova immagine `SECRET` nella directory `work_secret`, senza alterare gli altri file prodotti dall'estrazione. La ricostruzione finale è:
+
+```bat
 py bb_build_static_ccf.py work_secret --out build\SECRET.CCF
 ```
+
+In tutti e tre i casi il principio è quindi lo stesso: **il CCF originale fornisce la struttura, mentre il PNG 160×200 fornisce la nuova grafica**. Gli strumenti si occupano della codifica PC1 e della ricostruzione del file utilizzabile dal gioco.
 
 # ARCADE.TCF
 
