@@ -8,25 +8,65 @@ This document describes the **Olivetti Prodest PC1** graphics mode used by the p
 
 The Prodest PC1 uses a **Yamaha V6355D** video controller. The project takes advantage of an extended **160×200 16-colour** mode that the original DOS version of Bubble Bobble does not use directly.
 
-The modified game initializes the mode with:
+### Initialization used by the project
+
+The final initialization sequence used and verified during the project is located in `BUBBLE.EXE` at IDA address **`seg001:3F64`** (`loc_14144`). The routine is reached from the graphics-selection code through the branch at `seg001:3EC6`.
+
+The code is:
 
 ```asm
-mov dx,03D8h
-mov al,04Ah
-out dx,al
-inc dx
-mov al,20h
-out dx,al
-retn
+seg001:3F64  mov dx, 03D8h
+seg001:3F67  mov al, 4Ah
+seg001:3F69  out dx, al
+
+seg001:3F6A  inc dx          ; DX = 03D9h
+seg001:3F6B  mov al, 20h
+seg001:3F6D  out dx, al
+
+seg001:3F6E  mov al, 80h
+seg001:3F70  mov dx, 03DDh
+seg001:3F73  out dx, al
+
+seg001:3F74  retn
 ```
 
 Corresponding bytes:
 
 ```text
-BA D8 03 B0 4A EE 42 B0 20 EE C3
+BA D8 03 B0 4A EE 42 B0 20 EE B0 80 BA DD 03 EE C3
 ```
 
-The `BUBBLE.EXE` patch is documented in `patches/BUBBLE-EXE.md`.
+The sequence therefore performs three I/O operations:
+
+```text
+port 03D8h <- 4Ah
+port 03D9h <- 20h
+port 03DDh <- 80h
+```
+
+This is the sequence that should be considered authoritative for the project. An earlier version of this document stopped after the write to `03D9h`; that description was incomplete because it omitted the final `03DDh <- 80h` write.
+
+### Where the routine was placed
+
+The initialization code occupies IDA addresses **`3F64..3F74`**, inclusive: 17 bytes in total. In the executable layout used during the project, the mapping verified elsewhere in this code area is:
+
+```text
+FILE = IDA + 0x3E0
+```
+
+Using that mapping, `3F64..3F74` corresponds to file offsets **`0x4344..0x4354`**. As always with binary patches, these offsets must be checked against the exact executable version before applying them.
+
+The bytes immediately following the routine begin at IDA `3F75` and were left outside this 17-byte replacement.
+
+### What was overwritten?
+
+This point needs to be documented carefully. The disassembly preserved at the end of the project shows the **patched** routine at `3F64`; by itself it does not tell us what the original bytes in `3F64..3F74` were before the PC1 modification.
+
+We can therefore state with confidence **where the new initialization routine was installed and how large it is**, but we should not claim that the 17 bytes originally represented a particular function unless the unmodified `BUBBLE.EXE` is compared with the patched executable.
+
+The surrounding bytes at `3F75` belong to the following region and are not evidence of the original contents of the replaced 17 bytes. If the original executable is later compared byte-for-byte, this section can be extended with the exact original instructions and a description of what functionality, if any, was displaced.
+
+The other `BUBBLE.EXE` modifications, including the ARCADE renderers, are documented separately in `patches/BUBBLE-EXE.md`.
 
 ## 16-colour representation
 
