@@ -1,0 +1,36 @@
+MIT License
+
+Copyright (c) 2026 Massimiliano Pascuzzi and contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Third-party materials
+---------------------
+
+This license applies only to the original code, tools, patches, and
+documentation created specifically for the Bubble Bobble PC1 project.
+
+It does not apply to Bubble Bobble or to any original game code, binaries,
+graphics, characters, trademarks, names, or other materials owned by Taito or
+other third-party rights holders. No rights to those materials are granted by
+this license.
+
+The repository does not distribute the original Bubble Bobble game files or
+original game assets. Users must provide the required files from their own
+compatible copy of the DOS game.
